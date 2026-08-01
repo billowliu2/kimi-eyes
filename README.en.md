@@ -56,17 +56,25 @@ of the setup wizard); everything else is automatic.
 
 ### 1. Install the plugin
 
-In a Kimi Code session:
+In a Kimi Code session (any of these):
 
 ```
+# From GitHub (recommended)
+/plugins install https://github.com/billowliu2/kimi-eyes
+
+# From a local directory
 /plugins install D:\AIGC\Plugin\kimi-eyes
 ```
 
 ### 2. Configure the vision API (one-time)
 
-Run the setup wizard from the plugin directory:
+Run the setup wizard (any of these):
 
 ```
+# One-shot via npm (once published)
+npx kimi-eyes setup
+
+# From the local plugin directory
 cd D:\AIGC\Plugin\kimi-eyes
 node setup.mjs
 ```

@@ -38,17 +38,25 @@
 
 ### 1. 安装插件
 
-在 KimiCode 会话里执行：
+在 KimiCode 会话里执行（任选一种）：
 
 ```
+# 方式一：从 GitHub 安装（推荐）
+/plugins install https://github.com/billowliu2/kimi-eyes
+
+# 方式二：从本地目录安装
 /plugins install D:\AIGC\Plugin\kimi-eyes
 ```
 
 ### 2. 配置视觉 API（一次性）
 
-在插件目录运行配置向导：
+运行配置向导（任选一种）：
 
 ```
+# npm 安装后一键运行（发布后可用）
+npx kimi-eyes setup
+
+# 本地插件目录运行
 cd D:\AIGC\Plugin\kimi-eyes
 node setup.mjs
 ```

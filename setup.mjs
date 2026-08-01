@@ -7,7 +7,12 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { callVLM, modelsEndpoint, ONE_PX_PNG_BASE64, modelCapabilityTag } from './mcp/vision.mjs';
+
+// Directory that contains this script — used for the /plugins install hint.
+// Works both when run locally and when run via `npx kimi-eyes setup` from the npm package.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ---------------------------------------------------------------------------
 // Raw-mode line input (supports masked echo)
@@ -33,7 +38,13 @@ function ask(query, { hidden = false } = {}) {
   if (!stdin.isTTY) {
     // Non-TTY fallback (piped input in tests/CI): plain line read, no masking.
     process.stdout.write(query);
-    return ensurePipeLines().then((lines) => lines.shift() ?? '');
+    return ensurePipeLines().then((lines) => {
+      if (lines.length === 0) {
+        console.error('\n[setup] 输入已结束，向导中止。');
+        process.exit(1);
+      }
+      return lines.shift() ?? '';
+    });
   }
   process.stdout.write(query);
   stdin.setRawMode(true);
@@ -230,7 +241,7 @@ async function main() {
   if (cfg.mainModel) console.log(`  mainModel: ${cfg.mainModel} (触发判断用)`);
   console.log('');
   console.log('下一步：');
-  console.log(`  1. 安装插件: /plugins install ${process.cwd()}`);
+  console.log(`  1. 安装插件: /plugins install ${__dirname}`);
   console.log('  2. 启用插件: /reload');
   console.log('  3. 开始使用: 非多模态模型下 @图片路径 或 截图后提问');
 }
