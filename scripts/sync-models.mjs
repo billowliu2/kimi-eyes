@@ -33,11 +33,12 @@ const EXTRA_ENTRIES = {
 };
 
 function parseArgs(argv) {
-  const args = { timeout: 180, out: DEFAULT_OUT, endpoint: DEFAULT_ENDPOINT };
+  const args = { timeout: 180, out: DEFAULT_OUT, endpoint: DEFAULT_ENDPOINT, allowFail: false };
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--timeout') args.timeout = Number(argv[++i]) || 180;
     else if (argv[i] === '--out') args.out = argv[++i];
     else if (argv[i] === '--endpoint') args.endpoint = argv[++i];
+    else if (argv[i] === '--allow-fail') args.allowFail = true;
   }
   return args;
 }
@@ -61,7 +62,15 @@ const args = parseArgs(process.argv.slice(2));
 const tmpFile = path.join(os.tmpdir(), `models-dev-${Date.now()}.json`);
 
 console.log(`[sync-models] downloading ${args.endpoint} ...`);
-download(args.endpoint, tmpFile, args.timeout);
+try {
+  download(args.endpoint, tmpFile, args.timeout);
+} catch (err) {
+  if (args.allowFail) {
+    console.error(`[sync-models] WARN: sync failed, keeping existing db: ${err.message.split('\n')[0]}`);
+    process.exit(0);
+  }
+  throw err;
+}
 
 const raw = JSON.parse(fs.readFileSync(tmpFile, 'utf8'));
 if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {

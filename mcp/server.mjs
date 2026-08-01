@@ -125,13 +125,11 @@ async function callTool(name, args) {
 }
 
 // ---------------------------------------------------------------------------
-// JSON-RPC over stdio (MCP framing)
+// JSON-RPC over stdio (MCP stdio transport = newline-delimited JSON)
 // ---------------------------------------------------------------------------
 
 function send(obj) {
-  const body = Buffer.from(JSON.stringify(obj), 'utf8');
-  process.stdout.write(`Content-Length: ${body.length}\r\n\r\n`);
-  process.stdout.write(body);
+  process.stdout.write(`${JSON.stringify(obj)}\n`);
 }
 
 function sendError(id, code, message) {
@@ -198,33 +196,22 @@ function handleMessage(msg) {
   // Notifications (e.g. notifications/initialized) are intentionally ignored.
 }
 
-// --- framing parser ---------------------------------------------------------
+// --- newline-delimited JSON parser -----------------------------------------
 
 let buf = Buffer.alloc(0);
 
-function tryParseFrame() {
-  const headerEnd = buf.indexOf('\r\n\r\n');
-  if (headerEnd === -1) return null;
-  const header = buf.subarray(0, headerEnd).toString('ascii');
-  const m = /Content-Length:\s*(\d+)/i.exec(header);
-  if (!m) return null;
-  const len = Number(m[1]);
-  const bodyStart = headerEnd + 4;
-  if (buf.length < bodyStart + len) return null;
-  const body = buf.subarray(bodyStart, bodyStart + len).toString('utf8');
-  buf = buf.subarray(bodyStart + len);
-  return body;
-}
-
 function pump() {
   for (;;) {
-    const body = tryParseFrame();
-    if (body === null) break;
+    const idx = buf.indexOf('\n');
+    if (idx === -1) return;
+    const line = buf.subarray(0, idx).toString('utf8').replace(/\r$/, '');
+    buf = buf.subarray(idx + 1);
+    if (!line.trim()) continue;
     let msg;
     try {
-      msg = JSON.parse(body);
+      msg = JSON.parse(line);
     } catch (err) {
-      console.error(`[kimi-eyes] invalid JSON frame: ${err.message}`);
+      console.error(`[kimi-eyes] invalid JSON line: ${err.message}`);
       continue;
     }
     handleMessage(msg);
