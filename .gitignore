@@ -1,0 +1,13 @@
+# dependencies
+node_modules/
+
+# npm publish artifacts
+*.tgz
+
+# local secrets — never commit (credentials live in user-level ~/.npmrc)
+.env
+.env.*
+
+# local verification / scratch
+.verify/
+*.log
