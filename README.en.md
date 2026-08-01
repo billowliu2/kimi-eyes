@@ -110,7 +110,7 @@ The MCP server starts automatically with the session.
 | --- | --- |
 | Multimodal model | Paste with Alt+V directly — native vision, plugin not involved |
 | Non-multimodal + image path | Type `@screenshot.png` or paste the path; the model calls `read_image` |
-| Non-multimodal + just screenshotted/copied | Ask "analyze this screenshot"; the model calls `read_clipboard_image` to read the system clipboard |
+| Non-multimodal + just screenshotted/copied | Do **not** Alt+V paste (the CLI rejects pasting on non-multimodal models with `Current model does not support image input`); just ask "analyze this screenshot" — the model calls `read_clipboard_image` to read the system clipboard |
 
 ## Activation and triggering
 
@@ -240,6 +240,10 @@ or `xclip` (X11).
 
 ## Troubleshooting
 
+- **Alt+V paste reports `Current model does not support image input`** → that is the
+  Kimi Code CLI rejecting pastes on non-multimodal models. Use `@image-path`
+  (`read_image`) instead, or screenshot and ask directly (`read_clipboard_image`
+  reads the clipboard)
 - **Tool returns "Vision API is not configured"** → run `node setup.mjs`, or set
   `VISION_API_KEY` / `VISION_API_URL` / `VISION_MODEL`
 - **Model list fetch fails** (404/401) → the wizard falls back to manual entry; if

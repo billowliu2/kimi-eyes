@@ -82,7 +82,7 @@ MCP 服务器会随会话自动启动。
 | --- | --- |
 | 多模态模型 | 直接 Alt+V 粘贴图片，原生看图，插件不参与 |
 | 非多模态 + 有图片路径 | 输入 `@截图.png` 或直接给路径，模型自动调 `read_image` |
-| 非多模态 + 刚截图/复制 | 截图后直接提问「分析这张截图」，模型自动调 `read_clipboard_image` 读系统剪贴板 |
+| 非多模态 + 刚截图/复制 | 截图后**不要 Alt+V 粘贴**（CLI 会拒绝非多模态模型粘贴并报 `Current model does not support image input`），直接提问「分析这张截图」，模型自动调 `read_clipboard_image` 读系统剪贴板 |
 
 ## 激活与触发
 
@@ -184,6 +184,7 @@ node scripts/sync-models.mjs
 
 ## 故障排查
 
+- **Alt+V 粘贴报 `Current model does not support image input`** → 这是 KimiCode CLI 的拦截：非多模态模型不支持粘贴图片。改用 `@图片路径`（`read_image`）或截图后直接提问（`read_clipboard_image` 读剪贴板）
 - **工具返回「Vision API is not configured」** → 运行 `node setup.mjs`，或设置 `VISION_API_KEY` / `VISION_API_URL` / `VISION_MODEL`
 - **模型列表拉取失败**（404/401）→ 向导自动回退手动输入；若服务端不支持 `/models`，直接输入模型名即可
 - **视觉验证失败** → 换一个真正支持图片输入的模型（参考服务商文档，如 `qwen-vl-max`、`glm-4v`、`gpt-4o`、`claude-3-5-sonnet` 等）
