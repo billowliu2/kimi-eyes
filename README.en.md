@@ -71,7 +71,7 @@ In a Kimi Code session (any of these):
 Run the setup wizard (any of these):
 
 ```
-# One-shot via npm (once published)
+# One-shot via npm
 npx kimi-eyes setup
 
 # From the local plugin directory
