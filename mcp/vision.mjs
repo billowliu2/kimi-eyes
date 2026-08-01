@@ -10,7 +10,7 @@ import { execFileSync } from 'node:child_process';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const MODELS_DB_PATH = path.join(__dirname, 'models-db.json');
 
-export const VERSION = '1.0.0';
+export const VERSION = '1.0.2';
 
 export const EXT_MEDIA = {
   png: 'image/png',

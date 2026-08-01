@@ -1,5 +1,6 @@
+#!/usr/bin/env node
 // kimi-eyes MCP stdio server — zero-dependency.
-// Speaks JSON-RPC 2.0 over LSP-style framing (Content-Length headers) on stdio.
+// Speaks JSON-RPC 2.0 over the MCP stdio transport (newline-delimited JSON).
 
 import fs from 'node:fs';
 import path from 'node:path';
