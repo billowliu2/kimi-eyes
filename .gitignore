@@ -11,3 +11,6 @@ node_modules/
 # local verification / scratch
 .verify/
 *.log
+
+# screenshots dropped into the project root
+Snipaste_*
