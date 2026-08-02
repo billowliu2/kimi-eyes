@@ -152,10 +152,11 @@ kimi-eyes 的 MCP 服务器是标准 MCP，可直接挂载到 Claude Code。**�
 
 ```bash
 # 方式一：全局注册（user scope，所有项目可用）
-claude mcp add --scope user kimi-eyes -- node D:\AIGC\Plugin\kimi-eyes\mcp\server.mjs
+#   将 <插件目录> 替换为本机 kimi-eyes 的实际绝对路径（如 D:\code\kimi-eyes）
+claude mcp add --scope user kimi-eyes -- node "<插件目录>/mcp/server.mjs"
 
 # 方式二：仅当前项目
-claude mcp add kimi-eyes -- node D:\AIGC\Plugin\kimi-eyes\mcp\server.mjs
+claude mcp add kimi-eyes -- node "<插件目录>/mcp/server.mjs"
 
 # 方式三：npx 通用版（不依赖本地路径，任何机器可复制）
 claude mcp add --scope user kimi-eyes -- npx --prefer-online -y -p kimi-eyes kimi-eyes-mcp
@@ -201,7 +202,7 @@ claude mcp list
 ### 注意
 
 - Claude 3+ 模型原生多模态，Claude Code 大多场景直接看图；插件主要用于文本模型或统一走某个外部 VLM 的场景
-- 卸载：`claude mcp remove kimi-eyes`
+- 卸载（Claude Code 挂载）：见 [卸载](#卸载)
 
 **首次调用会弹一次审批**（MCP 工具权限）：选 *Approve for this session* 本会话免问；想永久免审批，在 `~/.kimi-code/config.toml` 添加：
 
@@ -212,6 +213,42 @@ pattern = "mcp__kimi-eyes__*"
 ```
 
 触发成功的标志：回答前 TUI 出现工具调用记录，模型随后基于返回的描述作答。若模型未自动调用（例如只贴了路径未提问），可直接命令：「调用 read_image 工具分析 D:\xxx.png」。
+
+## 卸载
+
+### kimi-code 插件方式
+
+在插件目录运行卸载脚本（任选一种）：
+
+```
+# 本地目录
+node uninstall.mjs
+
+# npm 一键运行
+npx -p kimi-eyes kimi-eyes-uninstall
+```
+
+脚本清理以下残留（位于 `KIMI_CODE_HOME` 或 `~/.kimi-code`）：
+
+1. `plugins/installed.json` 中的 kimi-eyes 条目（改前自动备份为 `installed.json.bak.uninstall-*`）
+2. `plugins/managed/kimi-eyes/` 安装副本
+3. `kimi-eyes/config.json` 配置目录（**含你的 VLM API Key**，删除前会二次确认）
+
+参数：`--yes` 跳过全部确认（适合脚本化）；`--dry-run` 只预览不执行。重复运行是安全的（幂等）。
+
+> **插件正被会话加载时**，安装副本目录可能无法完全删除——内容会先被清空，只剩一个空目录壳。重启 kimi-code 会话后执行 `rmdir` 清理：
+>
+> ```
+> rmdir "C:\Users\<用户名>\.kimi-code\plugins\managed\kimi-eyes"
+> ```
+
+卸载完成后**重启 kimi-code 会话**（或 `/reload`）完全生效：`mcp__kimi-eyes__*` 工具消失、SYSTEM.md 引导指令不再注入。
+
+### Claude Code 挂载方式
+
+```bash
+claude mcp remove kimi-eyes
+```
 
 ## 环境变量（可选，覆盖配置文件）
 
@@ -256,6 +293,15 @@ node scripts/sync-models.mjs
 - 模型匹配策略：精确 id → `provider/模型名` 后缀 → 大小写不敏感的名称匹配
 - **未收录的模型**：查询返回未知——向导回退关键词猜测（★疑似），触发判断回退 SYSTEM.md 引导，不影响使用
 - **手动特例**：models.dev 未收录但确认支持识图的模型（如 `k3-256k`、`kimi-for-coding`），在 `scripts/sync-models.mjs` 的 `EXTRA_ENTRIES` 里维护，每次同步自动合入、不会被覆盖
+
+**版本管理**：`package.json` 是唯一版本来源，发布前执行：
+
+```bash
+npm version patch --no-git-tag-version   # 更新 package.json，version 钩子自动同步 kimi.plugin.json
+npm publish                              # prepublishOnly 自动同步 models-db
+```
+
+`npm version` 的 `version` 钩子运行 `scripts/bump-version.mjs` 同步 `kimi.plugin.json`；MCP 的 `serverInfo.version`（`mcp/vision.mjs`）运行时直接读取 `package.json`，无需手动维护。想手动改版本：`node scripts/bump-version.mjs 1.0.6`。
 
 ## 工具
 

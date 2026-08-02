@@ -201,10 +201,11 @@ like `--scope`).
 
 ```bash
 # User-scope (global, all projects)
-claude mcp add --scope user kimi-eyes -- node D:\AIGC\Plugin\kimi-eyes\mcp\server.mjs
+#   Replace <plugin-dir> with the absolute path to kimi-eyes on your machine (e.g. D:\code\kimi-eyes)
+claude mcp add --scope user kimi-eyes -- node "<plugin-dir>/mcp/server.mjs"
 
 # Project-scope only
-claude mcp add kimi-eyes -- node D:\AIGC\Plugin\kimi-eyes\mcp\server.mjs
+claude mcp add kimi-eyes -- node "<plugin-dir>/mcp/server.mjs"
 
 # npx generic version (no local path; copy-paste on any machine)
 claude mcp add --scope user kimi-eyes -- npx --prefer-online -y -p kimi-eyes kimi-eyes-mcp
@@ -254,7 +255,7 @@ Screenshot → ask "analyze this screenshot" (model calls read_clipboard_image)
 - Claude 3+ models are natively multimodal, so Claude Code usually sees images
   directly; the plugin matters for text-only models or when you want a single
   external VLM
-- Uninstall: `claude mcp remove kimi-eyes`
+- Uninstall (Claude Code mount): see [Uninstall](#uninstall)
 
 **The first tool call prompts one approval** (MCP tool permission): choose *Approve
 for this session* to skip prompts for the rest of the session; for permanent
@@ -270,6 +271,49 @@ A successful trigger looks like: a tool call appears in the TUI before the answe
 and the model then answers based on the returned description. If the model does not
 call the tool on its own (e.g. you pasted a path without asking a question), just
 command it: "Call the read_image tool to analyze D:\xxx.png".
+
+## Uninstall
+
+### Kimi Code plugin
+
+Run the uninstall script from the plugin directory (either way):
+
+```bash
+# From the local plugin directory
+node uninstall.mjs
+
+# One-shot via npm
+npx -p kimi-eyes kimi-eyes-uninstall
+```
+
+The script cleans up these leftovers (under `KIMI_CODE_HOME` or `~/.kimi-code`):
+
+1. the kimi-eyes entry in `plugins/installed.json` (auto-backed-up to
+   `installed.json.bak.uninstall-*` before editing)
+2. the `plugins/managed/kimi-eyes/` installed copy
+3. the `kimi-eyes/config.json` config directory (**contains your VLM API key**;
+   you get a second confirmation before it is deleted)
+
+Flags: `--yes` skips all confirmations (for scripting); `--dry-run` only previews,
+executes nothing. Re-running is safe (idempotent).
+
+> **While the plugin is loaded by a running session**, the installed-copy directory
+> may not be fully removable — its contents are deleted first, leaving an empty
+> directory shell. After restarting the kimi-code session, clean it up with:
+>
+> ```
+> rmdir "C:\Users\<username>\.kimi-code\plugins\managed\kimi-eyes"
+> ```
+
+Once uninstalled, **restart the kimi-code session** (or `/reload`) for it to fully
+take effect: the `mcp__kimi-eyes__*` tools disappear and the SYSTEM.md guidance
+rules are no longer injected.
+
+### Claude Code mount
+
+```bash
+claude mcp remove kimi-eyes
+```
 
 ## Environment variables (optional; override the config file)
 
@@ -323,6 +367,18 @@ node scripts/sync-models.mjs
 - **Manual extras**: models.dev does not list every vision model (e.g. `k3-256k`,
   `kimi-for-coding`). Keep them in `EXTRA_ENTRIES` inside
   `scripts/sync-models.mjs` — every sync merges them in, so re-syncs never drop them
+
+**Version management**: `package.json` is the single source of truth. Before a
+release:
+
+```bash
+npm version patch --no-git-tag-version   # bumps package.json; the version hook syncs kimi.plugin.json
+npm publish                              # prepublishOnly syncs models-db automatically
+```
+
+The `version` hook runs `scripts/bump-version.mjs` to sync `kimi.plugin.json`;
+the MCP `serverInfo.version` (`mcp/vision.mjs`) reads `package.json` at runtime,
+so it never drifts. To bump manually: `node scripts/bump-version.mjs 1.0.6`.
 
 ## Tools
 
