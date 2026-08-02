@@ -537,6 +537,10 @@ claude mcp remove kimi-eyes</pre>
           <button class="faq-q">模型没有自动调用工具怎么办？<span class="ico">+</span></button>
           <div class="faq-a"><div class="faq-a-inner">通常 @ 图片路径或截图后提问就会自动触发。若未触发，可直接命令模型：「调用 read_image 工具分析 D:\xxx.png」。也可设置环境变量或在 config.toml 给模型声明 image_in 能力放行粘贴。</div></div>
         </div>
+        <div class="faq-item reveal">
+          <button class="faq-q">如何卸载？<span class="ico">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner"><strong>kimi-code 插件</strong>：在插件目录运行 <code style="font-family:var(--mono)">node uninstall.mjs</code>（或 <code style="font-family:var(--mono)">npx -p kimi-eyes kimi-eyes-uninstall</code>），清理 installed.json 条目、managed 安装副本、含 API Key 的配置目录三处残留；<code style="font-family:var(--mono)">--yes</code> 免确认、<code style="font-family:var(--mono)">--dry-run</code> 只预览。MCP 工具、SYSTEM.md 指令、<code style="font-family:var(--mono)">/skill kimi-eyes</code> 都随插件副本移除。<br/><strong>Claude Code</strong>：<code style="font-family:var(--mono)">claude mcp remove kimi-eyes</code>。</div></div>
+        </div>
       </div>
     </div>
   </section>

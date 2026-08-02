@@ -342,8 +342,9 @@ executes nothing. Re-running is safe (idempotent).
 > ```
 
 Once uninstalled, **restart the kimi-code session** (or `/reload`) for it to fully
-take effect: the `mcp__kimi-eyes__*` tools disappear and the SYSTEM.md guidance
-rules are no longer injected.
+take effect: the `mcp__kimi-eyes__*` tools disappear, the SYSTEM.md guidance
+rules are no longer injected, and the `/skill kimi-eyes` command is removed too
+(the skill ships inside the plugin copy).
 
 ### Claude Code mount
 

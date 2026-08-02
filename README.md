@@ -278,7 +278,7 @@ npx -p kimi-eyes kimi-eyes-uninstall
 > rmdir "C:\Users\<用户名>\.kimi-code\plugins\managed\kimi-eyes"
 > ```
 
-卸载完成后**重启 kimi-code 会话**（或 `/reload`）完全生效：`mcp__kimi-eyes__*` 工具消失、SYSTEM.md 引导指令不再注入。
+卸载完成后**重启 kimi-code 会话**（或 `/reload`）完全生效：`mcp__kimi-eyes__*` 工具消失、SYSTEM.md 引导指令不再注入、`/skill kimi-eyes` 命令也随之移除（skill 随插件副本删除）。
 
 ### Claude Code 挂载方式
 
