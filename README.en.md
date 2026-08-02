@@ -159,6 +159,78 @@ Both layers are fail-safe: a wrong judgment costs at most one wasted external ca
 the path/semantic signals). For a hard switch, simply `/plugins disable kimi-eyes`
 when running multimodal models.
 
+## Claude Code usage (optional)
+
+kimi-eyes's MCP server is standard MCP, so it can be mounted directly into Claude
+Code. **Run the commands below in a system terminal (PowerShell / Git Bash), not
+inside Claude Code's own Bash tool** (the in-app environment mishandles options
+like `--scope`).
+
+### 1. Prerequisites
+
+- Node.js ≥ 18
+- Claude Code CLI (`claude --version`)
+- A multimodal vision API of your own
+
+### 2. Mount the MCP server (any of these)
+
+```bash
+# User-scope (global, all projects)
+claude mcp add --scope user kimi-eyes -- node D:\AIGC\Plugin\kimi-eyes\mcp\server.mjs
+
+# Project-scope only
+claude mcp add kimi-eyes -- node D:\AIGC\Plugin\kimi-eyes\mcp\server.mjs
+
+# npx generic version (no local path; copy-paste on any machine)
+claude mcp add --scope user kimi-eyes -- npx --prefer-online -y -p kimi-eyes kimi-eyes-mcp
+```
+
+### 3. Configure the vision API (one-time)
+
+```bash
+npx kimi-eyes setup
+```
+
+> Same config is shared: kimi-eyes uses `~/.kimi-code/kimi-eyes/config.json` (or
+> `VISION_*` env vars) under both Kimi Code and Claude Code.
+
+### 4. Guidance rules (CLAUDE.md)
+
+Create (or append to) `CLAUDE.md` in your project root; the repo root `CLAUDE.md`
+is a ready-made example. Core rules:
+
+```markdown
+# Kimi Eyes — Vision Assist (Claude Code)
+
+Whenever the user's request involves image content and you cannot see it directly:
+1. Image path / @ reference → call `mcp__kimi-eyes__read_image` with that path.
+2. Just screenshotted/copied, or media you cannot read → call
+   `mcp__kimi-eyes__read_clipboard_image` (image is almost always still in the clipboard).
+3. Wording implies an image but no path → prefer `read_clipboard_image` over guessing.
+If your model is multimodal (Claude 3+), you see images natively — ignore these rules.
+```
+
+### 5. Verify
+
+```bash
+claude mcp list
+# kimi-eyes should show √ Connected
+```
+
+### 6. Usage
+
+```
+Image file → @C:\path\image.png what's in this?
+Screenshot → ask "analyze this screenshot" (model calls read_clipboard_image)
+```
+
+### Notes
+
+- Claude 3+ models are natively multimodal, so Claude Code usually sees images
+  directly; the plugin matters for text-only models or when you want a single
+  external VLM
+- Uninstall: `claude mcp remove kimi-eyes`
+
 **The first tool call prompts one approval** (MCP tool permission): choose *Approve
 for this session* to skip prompts for the rest of the session; for permanent
 approval, add to `~/.kimi-code/config.toml`:
