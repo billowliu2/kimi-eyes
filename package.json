@@ -1,6 +1,6 @@
 {
   "name": "kimi-eyes",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Give non-multimodal models in Kimi Code the ability to analyze images and screenshots via a user-configured VLM (OpenAI-compatible or Anthropic protocol).",
   "keywords": [
     "kimi",
@@ -18,6 +18,7 @@
   "type": "module",
   "bin": {
     "kimi-eyes": "setup.mjs",
+    "kimi-eyes-uninstall": "uninstall.mjs",
     "kimi-eyes-mcp": "mcp/server.mjs"
   },
   "files": [
@@ -26,6 +27,7 @@
     "SYSTEM.md",
     "kimi.plugin.json",
     "setup.mjs",
+    "uninstall.mjs",
     "README.md",
     "README.en.md",
     "LICENSE"
@@ -35,7 +37,9 @@
   },
   "scripts": {
     "setup": "node setup.mjs",
+    "uninstall": "node uninstall.mjs",
     "sync:models": "node scripts/sync-models.mjs",
+    "version": "node scripts/bump-version.mjs",
     "prepublishOnly": "node scripts/sync-models.mjs --allow-fail"
   }
 }

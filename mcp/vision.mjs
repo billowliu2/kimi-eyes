@@ -10,7 +10,19 @@ import { execFileSync } from 'node:child_process';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const MODELS_DB_PATH = path.join(__dirname, 'models-db.json');
 
-export const VERSION = '1.0.2';
+// Single source of truth for the version: package.json.
+// Shared by the MCP server (serverInfo.version) and any consumer of this module.
+function readPackageVersion() {
+  try {
+    const pkg = JSON.parse(
+      fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')
+    );
+    return typeof pkg.version === 'string' && pkg.version ? pkg.version : '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+}
+export const VERSION = readPackageVersion();
 
 export const EXT_MEDIA = {
   png: 'image/png',
@@ -145,6 +157,8 @@ export function anthropicEndpoint(baseUrl) {
 export function modelsEndpoint(baseUrl, protocol) {
   let b = String(baseUrl || '').trim().replace(/\/+$/, '');
   if (!b) return '';
+  // 用户可能把完整 chat/completions 端点当 BaseUrl 填（与 openaiEndpoint 处理保持一致）
+  if (/\/chat\/completions$/i.test(b)) b = b.replace(/\/chat\/completions$/i, '');
   if (/\/v\d+$/i.test(b)) return `${b}/models`;
   return `${b}/v1/models`;
 }

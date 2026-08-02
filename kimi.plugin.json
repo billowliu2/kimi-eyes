@@ -1,8 +1,14 @@
 {
   "name": "kimi-eyes",
-  "version": "1.0.0",
+  "version": "1.0.6",
   "description": "Give non-multimodal models vision: analyze local images and clipboard screenshots through a user-configured VLM API (OpenAI-compatible or Anthropic protocol).",
-  "keywords": ["vision", "image", "screenshot", "multimodal", "vlm"],
+  "keywords": [
+    "vision",
+    "image",
+    "screenshot",
+    "multimodal",
+    "vlm"
+  ],
   "author": "kimi-eyes",
   "license": "MIT",
   "interface": {
@@ -14,7 +20,9 @@
   "mcpServers": {
     "kimi-eyes": {
       "command": "node",
-      "args": ["./mcp/server.mjs"],
+      "args": [
+        "./mcp/server.mjs"
+      ],
       "cwd": "./"
     }
   }
