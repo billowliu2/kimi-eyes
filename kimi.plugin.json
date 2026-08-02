@@ -1,6 +1,6 @@
 {
   "name": "kimi-eyes",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Give non-multimodal models vision: analyze local images and clipboard screenshots through a user-configured VLM API (OpenAI-compatible or Anthropic protocol).",
   "keywords": [
     "vision",
@@ -17,6 +17,9 @@
     "longDescription": "读取本地图片或剪贴板截图，调用用户自配的多模态 API（OpenAI 兼容或 Anthropic 协议）返回描述。多模态模型不受影响，粘贴即原生看图。"
   },
   "systemPromptPath": "./SYSTEM.md",
+  "skills": [
+    "./skills"
+  ],
   "mcpServers": {
     "kimi-eyes": {
       "command": "node",

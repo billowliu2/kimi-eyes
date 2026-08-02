@@ -152,22 +152,16 @@ capabilities = [ "thinking", "tool_use", "image_in" ]   # append image_in
 
 The warning above says: on a text-only provider, declaring `image_in` and using **Alt-V paste** sends an `image_url` part to the provider and triggers a 400. But the same `image_in` declaration is harmless if you go through the **`/skill` command** instead — `/skill` renders the pasted image as an `Attached image file: <path>` **plain-text path**, producing no image part. This plugin ships a skill that exploits exactly this channel.
 
-**One-time setup (two steps)**:
+**One-time setup**:
 
-1. Declare `image_in` on the text-only model (only to pass the `/skill` frontend check; `/skill` sends no image part, so **no 400**):
+Declare `image_in` on the text-only model (only to pass the `/skill` frontend check; `/skill` sends no image part, so **no 400**):
 
 ```toml
 [models."opencode-go/deepseek-v4-flash"]
 capabilities = [ "thinking", "tool_use", "image_in" ]   # append image_in
 ```
 
-2. Register the skill — add the plugin's `skills/` dir to the scan list in `~/.kimi-code/config.toml`:
-
-```toml
-extra_skill_dirs = [ "D:/AIGC/Plugin/kimi-eyes/skills" ]
-```
-
-> If the plugin lives elsewhere, use its actual `kimi-eyes/skills` path. After restarting the session, `/skill kimi-eyes` appears in the `/` completion menu.
+> The skill ships with the plugin — `kimi.plugin.json` declares `skills`, so after `/plugins install kimi-eyes` the `/skill kimi-eyes` command is auto-registered into the `/` completion menu. **No `extra_skill_dirs` needed.**
 
 **Usage**:
 

@@ -117,22 +117,16 @@ capabilities = [ "thinking", "tool_use", "image_in" ]   # 追加 image_in
 
 上面警告过：纯文本 provider 声明 `image_in` 后走 **Alt-V 粘贴**，图片会作为 `image_url` part 发给 provider 触发 400。但同样声明 `image_in`，改走 **`/skill` 命令**就不会 400——`/skill` 通道把图片渲染成 `Attached image file: <路径>` 的**纯文本路径**，不产生 image part。本插件自带一个 skill 利用这条通道。
 
-**一次性配置（两步）**：
+**一次性配置**：
 
-1. 给纯文本模型声明 `image_in`（仅为通过 `/skill` 的前端校验；`/skill` 下图片不走 part，**不会**触发 400）：
+给纯文本模型声明 `image_in`（仅为通过 `/skill` 的前端校验；`/skill` 下图片不走 part，**不会**触发 400）：
 
 ```toml
 [models."opencode-go/deepseek-v4-flash"]
 capabilities = [ "thinking", "tool_use", "image_in" ]   # 追加 image_in
 ```
 
-2. 注册 skill——在 `~/.kimi-code/config.toml` 把插件目录的 `skills/` 加入扫描：
-
-```toml
-extra_skill_dirs = [ "D:/AIGC/Plugin/kimi-eyes/skills" ]
-```
-
-> 插件装在别处就换成实际的 `kimi-eyes/skills` 目录。重启会话后 `/skill kimi-eyes` 会出现在 `/` 补全菜单。
+> skill 由插件自带——`kimi.plugin.json` 已声明 `skills`，`/plugins install kimi-eyes` 后 `/skill kimi-eyes` 自动注册到 `/` 补全菜单，**无需** `extra_skill_dirs`。
 
 **用法**：
 
