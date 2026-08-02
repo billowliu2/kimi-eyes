@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://billowliu2.github.io/kimi-eyes/sitemap.xml

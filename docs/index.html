@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kimi Eyes - 让非多模态模型也能看图的 kimi-code 视觉插件</title>
+  <meta name="description" content="Kimi Eyes 是一个 kimi-code 插件，通过你自配的多模态 API，让 DeepSeek、Qwen 文本版、Llama 等非多模态模型也能分析本地图片与剪贴板截图。零依赖、双协议、三平台剪贴板支持。" />
+  <meta name="keywords" content="kimi-eyes, kimi-code, 视觉, 多模态, MCP, VLM, 截图识别, 图片分析, DeepSeek, Claude Code" />
+  <meta name="author" content="billowliu2" />
+  <link rel="canonical" href="https://billowliu2.github.io/kimi-eyes/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Kimi Eyes - 让非多模态模型也能看图" />
+  <meta property="og:description" content="kimi-code 视觉插件：通过你自配的多模态 API，让任意非多模态模型分析图片与截图。零依赖、双协议、隐私安全。" />
+  <meta property="og:url" content="https://billowliu2.github.io/kimi-eyes/" />
+  <meta property="og:image" content="https://billowliu2.github.io/kimi-eyes/og.png" />
+  <meta property="og:locale" content="zh_CN" />
+  <meta property="og:site_name" content="Kimi Eyes" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Kimi Eyes - 让非多模态模型也能看图" />
+  <meta name="twitter:description" content="kimi-code 视觉插件：通过你自配的多模态 API，让任意非多模态模型分析图片与截图。" />
+  <meta name="twitter:image" content="https://billowliu2.github.io/kimi-eyes/og.png" />
+
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230a0a0c'/%3E%3Cellipse cx='50' cy='50' rx='30' ry='18' fill='none' stroke='%2334d399' stroke-width='5'/%3E%3Ccircle cx='50' cy='50' r='9' fill='%2334d399'/%3E%3C/svg%3E" />
+
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Kimi Eyes",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Cross-platform",
+    "description": "kimi-code 视觉插件，让非多模态模型通过用户自配的 VLM API 分析图片与截图。",
+    "url": "https://billowliu2.github.io/kimi-eyes/",
+    "installUrl": "https://github.com/billowliu2/kimi-eyes",
+    "softwareVersion": "1.0.5",
+    "license": "https://opensource.org/licenses/MIT",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+    "author": { "@type": "Person", "name": "billowliu2" }
+  }
+  </script>
+
+  <style>
+    :root {
+      --bg: #0a0a0c;
+      --surface: #131316;
+      --surface-2: #1a1a20;
+      --border: #26262e;
+      --border-soft: #1e1e25;
+      --text: #e7e7ea;
+      --text-muted: #a1a1aa;
+      --text-dim: #71717a;
+      --accent: #34d399;
+      --accent-dim: #10b981;
+      --accent-soft: rgba(52, 211, 153, 0.1);
+      --r: 10px;
+      --r-sm: 6px;
+      --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Cascadia Code", "Menlo", Consolas, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, "PingFang SC", "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    a { color: var(--accent); text-decoration: none; transition: opacity .2s; }
+    a:hover { opacity: .8; }
+
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+    /* ---------- Nav ---------- */
+    header.nav {
+      position: sticky; top: 0; z-index: 50;
+      background: rgba(10,10,12,.72);
+      backdrop-filter: saturate(180%) blur(12px);
+      -webkit-backdrop-filter: saturate(180%) blur(12px);
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--text); font-size: 15px; letter-spacing: -.01em; }
+    .brand svg { width: 22px; height: 22px; }
+    .nav-links { display: flex; align-items: center; gap: 28px; }
+    .nav-links a { color: var(--text-muted); font-size: 14px; }
+    .nav-cta {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border: 1px solid var(--border); border-radius: var(--r-sm);
+      color: var(--text); font-size: 13px; font-family: var(--mono);
+    }
+    .nav-cta:hover { border-color: var(--accent); color: var(--accent); opacity: 1; }
+    @media (max-width: 720px) { .nav-links a:not(.nav-cta) { display: none; } }
+
+    /* ---------- Hero ---------- */
+    .hero { padding: 88px 0 64px; position: relative; }
+    .hero-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 56px; align-items: center; }
+    @media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; gap: 40px; } }
+
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--mono); font-size: 12px; color: var(--text-muted);
+      padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px;
+      background: var(--surface);
+    }
+    .pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+    h1.hero-title {
+      font-size: clamp(36px, 6vw, 60px);
+      line-height: 1.08; letter-spacing: -.03em; font-weight: 700;
+      margin: 22px 0 18px;
+    }
+    .hero-title .accent { color: var(--accent); }
+    .hero-sub { font-size: 17px; color: var(--text-muted); max-width: 30em; margin-bottom: 32px; }
+
+    .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 22px; border-radius: var(--r); font-size: 14px; font-weight: 600;
+      transition: transform .15s, background .2s, border-color .2s;
+      border: 1px solid transparent; cursor: pointer; font-family: var(--sans);
+    }
+    .btn:active { transform: translateY(1px); }
+    .btn-primary { background: var(--accent); color: #04130d; }
+    .btn-primary:hover { background: #2bc28b; opacity: 1; }
+    .btn-ghost { background: transparent; color: var(--text); border-color: var(--border); }
+    .btn-ghost:hover { border-color: var(--text-dim); opacity: 1; }
+
+    /* terminal */
+    .term {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--r);
+      font-family: var(--mono); font-size: 13px; overflow: hidden;
+      box-shadow: 0 20px 50px -20px rgba(0,0,0,.6);
+    }
+    .term-bar { display: flex; align-items: center; gap: 7px; padding: 11px 14px; border-bottom: 1px solid var(--border-soft); background: var(--surface-2); }
+    .term-bar .tb { width: 11px; height: 11px; border-radius: 50%; background: var(--border); }
+    .term-bar .label { margin-left: 8px; font-size: 11px; color: var(--text-dim); }
+    .term-body { padding: 18px 16px; line-height: 1.85; color: var(--text-muted); }
+    .term-body .cmt { color: var(--text-dim); }
+    .term-body .ok { color: var(--accent); }
+    .term-body .you { color: var(--text); }
+    .term-body .cmd { color: #e7e7ea; }
+    .term-body .prompt { color: var(--accent); }
+
+    /* ---------- Section base ---------- */
+    section.block { padding: 72px 0; border-top: 1px solid var(--border-soft); }
+    .eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: .04em; color: var(--accent); margin-bottom: 14px; display: block; }
+    h2.s-title { font-size: clamp(26px, 4vw, 36px); line-height: 1.15; letter-spacing: -.025em; font-weight: 700; max-width: 18em; }
+    .s-lead { color: var(--text-muted); margin-top: 14px; max-width: 38em; font-size: 16px; }
+
+    /* ---------- Statement ---------- */
+    .statement { padding: 80px 0; }
+    .statement p {
+      font-size: clamp(22px, 3.2vw, 30px); line-height: 1.4; letter-spacing: -.02em;
+      color: var(--text); max-width: 20em; font-weight: 500;
+    }
+    .statement p .muted { color: var(--text-dim); }
+    .statement p .hl { color: var(--accent); }
+
+    /* ---------- Bento ---------- */
+    .bento { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-top: 40px; }
+    .cell {
+      background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--r);
+      padding: 24px; transition: border-color .2s;
+    }
+    .cell:hover { border-color: var(--border); }
+    .cell h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; letter-spacing: -.01em; }
+    .cell p { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+    .cell.wide { grid-column: span 4; }
+    .cell.tall { grid-column: span 2; grid-row: span 2; }
+    .cell.med { grid-column: span 2; }
+    .cell.dark { background: var(--surface-2); }
+    .cell .tag { font-family: var(--mono); font-size: 11px; color: var(--text-dim); margin-bottom: 12px; display: block; }
+    .cell ul { list-style: none; margin-top: 12px; }
+    .cell ul li { font-family: var(--mono); font-size: 12px; color: var(--text-muted); padding: 3px 0; }
+    @media (max-width: 760px) {
+      .bento { grid-template-columns: 1fr; }
+      .cell.wide, .cell.tall, .cell.med { grid-column: span 1; grid-row: auto; }
+    }
+    .vis-flow { font-family: var(--mono); font-size: 12.5px; color: var(--text-muted); line-height: 1.9; margin-top: 14px; }
+    .vis-flow .arr { color: var(--text-dim); }
+    .vis-flow .a { color: var(--accent); }
+
+    /* ---------- How it works ---------- */
+    .flow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 44px; }
+    .flow-step { padding: 0 26px 0 0; border-right: 1px solid var(--border-soft); }
+    .flow-step:last-child { border-right: none; }
+    .flow-step .num { font-family: var(--mono); font-size: 12px; color: var(--text-dim); margin-bottom: 10px; }
+    .flow-step h3 { font-size: 17px; font-weight: 600; margin-bottom: 10px; letter-spacing: -.01em; }
+    .flow-step p { font-size: 14px; color: var(--text-muted); }
+    @media (max-width: 760px) { .flow { grid-template-columns: 1fr; gap: 28px; } .flow-step { border-right: none; border-bottom: 1px solid var(--border-soft); padding: 0 0 24px; } .flow-step:last-child { border-bottom: none; } }
+
+    /* ---------- Install tabs ---------- */
+    .tabs { margin-top: 36px; }
+    .tab-bar { display: flex; gap: 4px; border-bottom: 1px solid var(--border-soft); margin-bottom: 20px; }
+    .tab-btn {
+      background: none; border: none; color: var(--text-dim); font-family: var(--sans); font-size: 14px;
+      padding: 12px 18px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color .2s, border-color .2s;
+    }
+    .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+    .code-block { position: relative; background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--r); }
+    .code-block pre { padding: 18px 56px 18px 18px; overflow-x: auto; font-family: var(--mono); font-size: 13px; line-height: 1.85; color: var(--text-muted); }
+    .code-block pre .cmt { color: var(--text-dim); }
+    .code-block pre .ok { color: var(--accent); }
+    .copy-btn {
+      position: absolute; top: 10px; right: 10px; background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--text-dim); font-family: var(--mono); font-size: 11px; padding: 4px 10px; border-radius: var(--r-sm);
+      cursor: pointer; transition: color .2s, border-color .2s;
+    }
+    .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+    .copy-btn.copied { color: var(--accent); }
+
+    /* ---------- Tools reference ---------- */
+    .tools { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 40px; }
+    @media (max-width: 760px) { .tools { grid-template-columns: 1fr; } }
+    .tool-card { background: var(--surface); border: 1px solid var(--border-soft); border-radius: var(--r); padding: 24px; }
+    .tool-card .tname { font-family: var(--mono); font-size: 14px; color: var(--accent); margin-bottom: 4px; }
+    .tool-card .tdesc { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; }
+    .tool-card .schema { font-family: var(--mono); font-size: 12.5px; color: var(--text-muted); background: var(--bg); border: 1px solid var(--border-soft); border-radius: var(--r-sm); padding: 12px 14px; line-height: 1.8; }
+    .tool-card .schema .k { color: var(--accent); }
+    .tool-card .schema .opt { color: var(--text-dim); }
+
+    /* ---------- FAQ ---------- */
+    .faq { margin-top: 36px; max-width: 760px; }
+    .faq-item { border-bottom: 1px solid var(--border-soft); }
+    .faq-q {
+      width: 100%; background: none; border: none; color: var(--text); font-family: var(--sans); font-size: 16px;
+      text-align: left; padding: 22px 0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 16px;
+      transition: color .2s;
+    }
+    .faq-q:hover { color: var(--accent); }
+    .faq-q .ico { flex-shrink: 0; color: var(--text-dim); font-size: 18px; transition: transform .25s; }
+    .faq-item.open .faq-q .ico { transform: rotate(45deg); color: var(--accent); }
+    .faq-a { max-height: 0; overflow: hidden; transition: max-height .3s ease; color: var(--text-muted); font-size: 15px; }
+    .faq-item.open .faq-a { max-height: 240px; }
+    .faq-a-inner { padding: 0 0 22px; line-height: 1.7; }
+
+    /* ---------- Footer ---------- */
+    footer.foot { padding: 56px 0 40px; border-top: 1px solid var(--border-soft); margin-top: 40px; }
+    .foot-grid { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; flex-wrap: wrap; }
+    .foot-brand { color: var(--text-dim); font-size: 13px; font-family: var(--mono); }
+    .foot-links { display: flex; gap: 22px; }
+    .foot-links a { color: var(--text-muted); font-size: 14px; }
+
+    /* reveal */
+    .reveal { opacity: 0; transform: translateY(20px); }
+    @media (prefers-reduced-motion: no-preference) {
+      .reveal.in { opacity: 1; transform: none; transition: opacity .6s cubic-bezier(.16,1,.3,1), transform .6s cubic-bezier(.16,1,.3,1); }
+    }
+    @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } html { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a href="#" class="brand">
+      <svg viewBox="0 0 100 100" aria-hidden="true"><ellipse cx="50" cy="50" rx="32" ry="19" fill="none" stroke="#34d399" stroke-width="6"/><circle cx="50" cy="50" r="10" fill="#34d399"/></svg>
+      Kimi Eyes
+    </a>
+    <nav class="nav-links">
+      <a href="#features">特性</a>
+      <a href="#how">原理</a>
+      <a href="#install">安装</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://github.com/billowliu2/kimi-eyes" class="nav-cta" target="_blank" rel="noopener">GitHub →</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="reveal">
+        <span class="pill">kimi-code 视觉插件</span>
+        <h1 class="hero-title">给文本模型<br/><span class="accent">一双看图的眼睛</span></h1>
+        <p class="hero-sub">通过你自配的多模态 API，让 DeepSeek、Qwen 文本版、Llama 等非多模态模型也能分析本地图片与剪贴板截图。</p>
+        <div class="cta-row">
+          <a href="https://github.com/billowliu2/kimi-eyes" class="btn btn-primary" target="_blank" rel="noopener">查看 GitHub</a>
+          <a href="#install" class="btn btn-ghost">快速开始</a>
+        </div>
+      </div>
+      <div class="reveal">
+        <div class="term" aria-hidden="true">
+          <div class="term-bar"><span class="tb"></span><span class="tb"></span><span class="tb"></span><span class="label">kimi-eyes</span></div>
+          <div class="term-body">
+<span class="cmd">$ npx kimi-eyes setup</span> <span class="cmt"># 配置你的视觉 API</span>
+<span class="cmt">  协议</span> openai <span class="cmt">·</span> <span class="cmt">模型</span> gpt-4o <span class="ok">✓视觉</span>
+<span class="cmd">$ /plugins install kimi-eyes</span>
+<span class="cmd">$ /reload</span>
+
+<span class="you">你</span> <span class="cmt">@chart.png 这个图表说明了什么?</span>
+<span class="cmt">→ 模型调用</span> <span class="prompt">mcp__kimi-eyes__read_image</span>
+<span class="cmt">→ 你的 VLM 返回描述 → 模型作答</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATEMENT -->
+  <section class="statement">
+    <div class="wrap">
+      <p class="reveal">主模型只管理解文字，<span class="hl">看图交给外部 VLM</span>。<br/><span class="muted">多模态模型粘贴即看，插件自动闲置。</span></p>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="block" id="features">
+    <div class="wrap">
+      <span class="eyebrow reveal">能力</span>
+      <h2 class="s-title reveal">为非多模态模型补上视觉</h2>
+      <p class="s-lead reveal">无论你的 kimi-code 当前用哪个模型、来自哪家服务商，只要它不具备原生图片输入能力，Kimi Eyes 就能为它补上视觉。视觉能力由你自己配置的 VLM 提供，与主模型完全解耦。</p>
+
+      <div class="bento">
+        <div class="cell wide reveal">
+          <span class="tag">兼容</span>
+          <h3>让任意文本模型看图</h3>
+          <p>DeepSeek、Qwen 纯文本版、Llama 文本系列、本地部署的文本模型，以及任何第三方 OpenAI 兼容模型。只要它原生不看图，插件就会在消息含图片时引导它调用视觉工具。</p>
+        </div>
+        <div class="cell tall dark reveal">
+          <span class="tag">架构</span>
+          <h3>零依赖，纯 Node</h3>
+          <p>无 npm 依赖、无原生模块。基于 Node 18+ 原生 fetch 实现。</p>
+          <div class="vis-flow">
+            模型 <span class="arr">→</span> MCP 工具<br/>
+            <span class="arr">→</span> 你配置的 VLM<br/>
+            <span class="arr">→</span> 文本描述<br/>
+            <span class="arr">→</span> 模型作答
+          </div>
+        </div>
+        <div class="cell med reveal">
+          <span class="tag">协议</span>
+          <h3>双协议支持</h3>
+          <ul>
+            <li>OpenAI 兼容 chat/completions</li>
+            <li>Anthropic messages API</li>
+          </ul>
+        </div>
+        <div class="cell med reveal">
+          <span class="tag">剪贴板</span>
+          <h3>三平台截图</h3>
+          <ul>
+            <li>Windows PowerShell（内置）</li>
+            <li>macOS pngpaste</li>
+            <li>Linux wl-paste / xclip</li>
+          </ul>
+        </div>
+        <div class="cell wide reveal">
+          <span class="tag">能力库</span>
+          <h3>内置 models.dev 精简数据库</h3>
+          <p>收录 287 个模型并标注是否支持图片输入，用于向导精确标注视觉能力，以及声明主模型后判断是否多模态，实现代码级触发开关。未收录的模型回退关键词猜测。</p>
+        </div>
+        <div class="cell med dark reveal">
+          <span class="tag">隐私</span>
+          <h3>密钥只发往你的端点</h3>
+          <p>不内置任何密钥，视觉请求只发往你配置的 BaseUrl。API Key 明文存于本地配置（类 Unix 已设 600 权限）。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW -->
+  <section class="block" id="how">
+    <div class="wrap">
+      <h2 class="s-title reveal">三步运转</h2>
+      <p class="s-lead reveal">插件声明一个 MCP stdio 服务器，暴露两个工具：read_image（读本地图片）与 read_clipboard_image（读剪贴板截图）。SYSTEM.md 引导模型在需要时调用，服务器按你的协议把图片发给你自配的多模态 API。</p>
+
+      <div class="flow">
+        <div class="flow-step reveal">
+          <div class="num">/ 01</div>
+          <h3>配置视觉 API</h3>
+          <p>运行交互向导，选择协议、填写 BaseUrl 与 API Key、挑选多模态模型，1×1 图片验证通过后写入本地配置。</p>
+        </div>
+        <div class="flow-step reveal">
+          <div class="num">/ 02</div>
+          <h3>安装并启用插件</h3>
+          <p>在 kimi-code 会话里安装插件并 reload，MCP 服务器随会话自动启动，两个视觉工具注册给模型。</p>
+        </div>
+        <div class="flow-step reveal">
+          <div class="num">/ 03</div>
+          <h3>自动触发看图</h3>
+          <p>你 @ 图片路径或截图后提问，模型自动调用视觉工具取回描述并作答。全程零命令。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INSTALL -->
+  <section class="block" id="install">
+    <div class="wrap">
+      <span class="eyebrow reveal">安装</span>
+      <h2 class="s-title reveal">两种使用方式</h2>
+      <p class="s-lead reveal">作为 kimi-code 插件安装是最简路径；也可作为标准 MCP 服务器挂载到 Claude Code 等任意 MCP 客户端。</p>
+
+      <div class="tabs reveal">
+        <div class="tab-bar" role="tablist">
+          <button class="tab-btn active" data-tab="kc" role="tab">kimi-code 插件</button>
+          <button class="tab-btn" data-tab="cc" role="tab">Claude Code MCP</button>
+        </div>
+
+        <div class="tab-pane active" data-pane="kc">
+          <div class="code-block">
+            <button class="copy-btn" data-copy="kc-code">复制</button>
+            <pre id="kc-code"><span class="cmt"># 1. 配置视觉 API（一次性）</span>
+npx kimi-eyes setup
+
+<span class="cmt"># 2. 在 kimi-code 会话里安装插件</span>
+/plugins install https://github.com/billowliu2/kimi-eyes
+
+<span class="cmt"># 3. 启用</span>
+/reload <span class="cmt"># MCP 服务器随会话启动</span>
+
+<span class="cmt"># 使用</span>
+@截图.png 这个图里有什么?     <span class="cmt"># → read_image</span>
+分析这张截图                 <span class="cmt"># → read_clipboard_image</span></pre>
+          </div>
+        </div>
+
+        <div class="tab-pane" data-pane="cc">
+          <div class="code-block">
+            <button class="copy-btn" data-copy="cc-code">复制</button>
+            <pre id="cc-code"><span class="cmt"># 在系统终端执行（PowerShell / Git Bash）</span>
+
+<span class="cmt"># 挂载为标准 MCP 服务器（全局，任意项目可用）</span>
+claude mcp add --scope user kimi-eyes \
+  -- npx --prefer-online -y -p kimi-eyes kimi-eyes-mcp
+
+<span class="cmt"># 配置视觉 API（与 kimi-code 共用同一份配置）</span>
+npx kimi-eyes setup
+
+<span class="cmt"># 验证连接</span>
+claude mcp list <span class="cmt"># kimi-eyes 应显示 √ Connected</span>
+
+<span class="cmt"># 卸载</span>
+claude mcp remove kimi-eyes</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOLS -->
+  <section class="block" id="tools">
+    <div class="wrap">
+      <h2 class="s-title reveal">两个 MCP 工具</h2>
+      <p class="s-lead reveal">工具按需被模型调用。文件先经扩展名与魔数双重校验，剪贴板图片存为临时文件、用完即删。</p>
+
+      <div class="tools">
+        <div class="tool-card reveal">
+          <div class="tname">read_image</div>
+          <div class="tdesc">分析本地图片文件。用户给出图片路径或 @ 引用、且模型不能直接看图时使用。</div>
+          <div class="schema">
+<span class="k">path</span>   <span class="opt">string  (必填)</span>  本地图片绝对路径
+<span class="opt">prompt</span> <span class="opt">string  (可选)</span>  分析指令，默认描述图片
+<span class="cmt" style="color:var(--text-dim)"># 支持 png jpg jpeg webp gif bmp</span>
+          </div>
+        </div>
+        <div class="tool-card reveal">
+          <div class="tname">read_clipboard_image</div>
+          <div class="tdesc">捕获系统剪贴板中的图片（如刚截的图）并分析。用户刚截图或复制、未给出路径时使用。</div>
+          <div class="schema">
+<span class="opt">prompt</span> <span class="opt">string  (可选)</span>  分析指令，默认描述图片
+<span class="cmt" style="color:var(--text-dim)"># 剪贴板图片存临时文件，调用后删除</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="block" id="faq">
+    <div class="wrap">
+      <span class="eyebrow reveal">常见问题</span>
+      <h2 class="s-title reveal">你可能想问的</h2>
+
+      <div class="faq">
+        <div class="faq-item reveal">
+          <button class="faq-q">多模态模型还需要这个插件吗？<span class="ico">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner">不需要。GPT-4o、Claude 3+、Gemini 等多模态模型粘贴图片即可原生看图，插件会自动闲置。Kimi Eyes 主要服务文本模型，或你想统一走某个外部 VLM 的场景。</div></div>
+        </div>
+        <div class="faq-item reveal">
+          <button class="faq-q">我的 API Key 安全吗？<span class="ico">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner">插件不内置任何密钥，视觉请求只发往你配置的 BaseUrl。Key 以明文存于 ~/.kimi-code/kimi-eyes/config.json（类 Unix 系统已设 600 权限），不会上传到任何第三方。也可用 VISION_API_KEY 等环境变量替代配置文件。</div></div>
+        </div>
+        <div class="faq-item reveal">
+          <button class="faq-q">支持哪些图片格式？<span class="ico">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner">PNG、JPG、JPEG、WEBP、GIF、BMP。文件会经过扩展名与魔数（magic bytes）双重校验，扩展名不符或内容损坏会被拒绝。</div></div>
+        </div>
+        <div class="faq-item reveal">
+          <button class="faq-q">模型没有自动调用工具怎么办？<span class="ico">+</span></button>
+          <div class="faq-a"><div class="faq-a-inner">通常 @ 图片路径或截图后提问就会自动触发。若未触发，可直接命令模型：「调用 read_image 工具分析 D:\xxx.png」。也可设置环境变量或在 config.toml 给模型声明 image_in 能力放行粘贴。</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-grid">
+    <div class="foot-brand">MIT License · Kimi Eyes · by billowliu2</div>
+    <div class="foot-links">
+      <a href="https://github.com/billowliu2/kimi-eyes" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://www.npmjs.com/package/kimi-eyes" target="_blank" rel="noopener">npm</a>
+      <a href="https://github.com/billowliu2/kimi-eyes/issues" target="_blank" rel="noopener">Issues</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Reveal on scroll
+  (function () {
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var els = document.querySelectorAll('.reveal');
+    if (reduce || !('IntersectionObserver' in window)) {
+      els.forEach(function (e) { e.classList.add('in'); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+    els.forEach(function (e) { io.observe(e); });
+  })();
+
+  // Tabs
+  document.querySelectorAll('.tab-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var tab = btn.getAttribute('data-tab');
+      document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.toggle('active', b === btn); });
+      document.querySelectorAll('.tab-pane').forEach(function (p) {
+        p.classList.toggle('active', p.getAttribute('data-pane') === tab);
+      });
+    });
+  });
+
+  // Copy buttons
+  document.querySelectorAll('.copy-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var id = btn.getAttribute('data-copy');
+      var text = document.getElementById(id).innerText;
+      navigator.clipboard.writeText(text).then(function () {
+        btn.textContent = '已复制';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = '复制'; btn.classList.remove('copied'); }, 1500);
+      });
+    });
+  });
+
+  // FAQ accordion
+  document.querySelectorAll('.faq-q').forEach(function (q) {
+    q.addEventListener('click', function () {
+      var item = q.parentElement;
+      var open = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(function (i) { i.classList.remove('open'); });
+      if (!open) item.classList.add('open');
+    });
+  });
+</script>
+
+</body>
+</html>
