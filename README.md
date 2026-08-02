@@ -83,8 +83,19 @@ MCP 服务器会随会话自动启动。
 | 多模态模型 | 直接 Alt+V 粘贴图片，原生看图，插件不参与 |
 | 非多模态 + 有图片路径 | 输入 `@截图.png` 或直接给路径，模型自动调 `read_image` |
 | 非多模态 + 刚截图/复制 | 直接提问「分析这张截图」，模型自动调 `read_clipboard_image` 读系统剪贴板 |
-| 非多模态 + 想用 Alt+V 粘贴 | 需先在 config.toml 给模型声明 `image_in`（见下），粘贴后直接提问即可——模型看不懂图片内容时会自动调 `read_clipboard_image`（剪贴板仍保留原图） |
+| 非多模态 + 想用 Alt+V 粘贴 | 纯文本模型需 `/skill kimi-eyes` 配合（见下），单纯粘贴会报错 |
 | 粘贴被拦截 | 直接告诉模型「我粘贴图片被拦截了」，模型会自动改读剪贴板，无需你保存文件 |
+
+#### 看图方式 × `image_in` 速查
+
+| 看图方式 | 需要 `image_in`？ | 纯文本可用？ | 顺滑度 |
+| --- | --- | --- | --- |
+| 截图后随口一问（自动读剪贴板） | 否 | ✅ | 最省事 |
+| `@路径` / 给路径 | 否 | ✅ | 省事 |
+| `/skill kimi-eyes` + Alt-V | 是 | ✅ | 多步 |
+| 单纯 Alt-V | 声明与否 | ❌ | 走不通 |
+
+> 纯文本模型日常看图优先用前两种；只有「就想用粘贴这个动作」时才走 `/skill kimi-eyes`（见下）。
 
 #### 想用 Alt+V 粘贴？（给模型声明 `image_in`）
 
@@ -101,6 +112,37 @@ capabilities = [ "thinking", "tool_use", "image_in" ]   # 追加 image_in
 > - **纯文本 provider**（如 deepseek-v4-flash、glm 文本版）**不要声明**——声明后粘贴会被放行，但请求发给 provider 时图片 part 会被拒（400 `unknown variant image_url, expected text`）。此时前端拦截反而是保护
 >
 > 纯文本模型的正确用法：`@图片路径`（read_image）或截图后直接提问（read_clipboard_image 读剪贴板）；粘贴被拦截就直接告诉模型「粘贴被拦截了」，它会自动改读剪贴板。**全程零命令**。
+
+#### 纯文本模型也想「粘贴看图」？用 `/skill`（推荐）
+
+上面警告过：纯文本 provider 声明 `image_in` 后走 **Alt-V 粘贴**，图片会作为 `image_url` part 发给 provider 触发 400。但同样声明 `image_in`，改走 **`/skill` 命令**就不会 400——`/skill` 通道把图片渲染成 `Attached image file: <路径>` 的**纯文本路径**，不产生 image part。本插件自带一个 skill 利用这条通道。
+
+**一次性配置（两步）**：
+
+1. 给纯文本模型声明 `image_in`（仅为通过 `/skill` 的前端校验；`/skill` 下图片不走 part，**不会**触发 400）：
+
+```toml
+[models."opencode-go/deepseek-v4-flash"]
+capabilities = [ "thinking", "tool_use", "image_in" ]   # 追加 image_in
+```
+
+2. 注册 skill——在 `~/.kimi-code/config.toml` 把插件目录的 `skills/` 加入扫描：
+
+```toml
+extra_skill_dirs = [ "D:/AIGC/Plugin/kimi-eyes/skills" ]
+```
+
+> 插件装在别处就换成实际的 `kimi-eyes/skills` 目录。重启会话后 `/skill kimi-eyes` 会出现在 `/` 补全菜单。
+
+**用法**：
+
+```
+/skill kimi-eyes 这张图表说明了什么?    ← 然后 Alt-V 粘贴图片，回车
+```
+
+模型会从消息里的 `Attached image file: <路径>` 提取路径，调用 kimi-eyes 的 `read_image`（外部 VLM 返回文字描述）再作答。全程不产生 image part，纯文本模型不会 400。
+
+> ⚠️ **声明 `image_in` 后的使用约束**：看图一律走 `/skill kimi-eyes`，**不要**再直接 Alt-V 粘贴（主 prompt 通道仍会把图片作 image part 发给纯文本 provider → 400）。`@图片路径` 和「截图后提问」两种老用法不受影响。
 
 ## 激活与触发
 

@@ -1,6 +1,6 @@
 {
   "name": "kimi-eyes",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "Give non-multimodal models vision: analyze local images and clipboard screenshots through a user-configured VLM API (OpenAI-compatible or Anthropic protocol).",
   "keywords": [
     "vision",

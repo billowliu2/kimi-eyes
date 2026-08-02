@@ -429,7 +429,10 @@ npx kimi-eyes setup
 
 <span class="cmt"># 使用</span>
 @截图.png 这个图里有什么?     <span class="cmt"># → read_image</span>
-分析这张截图                 <span class="cmt"># → read_clipboard_image</span></pre>
+分析这张截图                 <span class="cmt"># → read_clipboard_image</span>
+
+<span class="cmt"># 纯文本模型想「粘贴」看图（需先声明 image_in + 注册 skill，详见 README）：</span>
+/skill kimi-eyes 这张图说明什么? <span class="cmt"># 然后 Alt-V 粘贴图片，回车</span></pre>
           </div>
         </div>
 
@@ -453,6 +456,33 @@ claude mcp remove kimi-eyes</pre>
           </div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- WAYS TO VIEW -->
+  <section class="block" id="ways">
+    <div class="wrap">
+      <h2 class="s-title reveal">看图方式 × <code style="font-family:var(--mono);color:var(--accent)">image_in</code></h2>
+      <p class="s-lead reveal">纯文本主模型下，不同看图姿势对 <code style="font-family:var(--mono)">image_in</code> 的要求和可用性不同。</p>
+      <div class="reveal" style="overflow-x:auto;margin-top:32px">
+        <table style="width:100%;border-collapse:collapse;font-size:14px;min-width:560px">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border)">
+              <th style="text-align:left;padding:12px 10px;font-weight:600;color:var(--text-muted)">看图方式</th>
+              <th style="text-align:left;padding:12px 10px;font-weight:600;color:var(--text-muted)">需要 image_in?</th>
+              <th style="text-align:left;padding:12px 10px;font-weight:600;color:var(--text-muted)">纯文本可用?</th>
+              <th style="text-align:left;padding:12px 10px;font-weight:600;color:var(--text-muted)">顺滑度</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border-soft)"><td style="padding:12px 10px">截图后随口一问（自动读剪贴板）</td><td style="padding:12px 10px;color:var(--text-dim)">否</td><td style="padding:12px 10px;color:var(--accent)">✅</td><td style="padding:12px 10px;color:var(--text-muted)">最省事</td></tr>
+            <tr style="border-bottom:1px solid var(--border-soft)"><td style="padding:12px 10px"><code style="font-family:var(--mono)">@路径</code> / 给路径</td><td style="padding:12px 10px;color:var(--text-dim)">否</td><td style="padding:12px 10px;color:var(--accent)">✅</td><td style="padding:12px 10px;color:var(--text-muted)">省事</td></tr>
+            <tr style="border-bottom:1px solid var(--border-soft)"><td style="padding:12px 10px"><code style="font-family:var(--mono)">/skill kimi-eyes</code> + Alt-V</td><td style="padding:12px 10px;color:var(--text)">是</td><td style="padding:12px 10px;color:var(--accent)">✅</td><td style="padding:12px 10px;color:var(--text-muted)">多步</td></tr>
+            <tr><td style="padding:12px 10px">单纯 Alt-V</td><td style="padding:12px 10px;color:var(--text-dim)">声明与否</td><td style="padding:12px 10px;color:var(--text-dim)">❌</td><td style="padding:12px 10px;color:var(--text-dim)">走不通</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="s-lead reveal" style="margin-top:20px">日常优先用前两种；只有「就想粘贴」时才走 <code style="font-family:var(--mono)">/skill kimi-eyes</code>。</p>
     </div>
   </section>
 

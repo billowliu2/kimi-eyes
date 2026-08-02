@@ -113,6 +113,17 @@ The MCP server starts automatically with the session.
 | Non-multimodal + just screenshotted/copied | Do **not** Alt+V paste (the CLI rejects pasting on non-multimodal models with `Current model does not support image input`); just ask "analyze this screenshot" — the model calls `read_clipboard_image` to read the system clipboard |
 | Non-multimodal + paste was rejected | Tell the model "my paste was blocked" — it will switch to `read_clipboard_image` automatically; no need to save the file |
 
+#### Ways to view images × `image_in`
+
+| Way | Needs `image_in`? | Text-only OK? | Effort |
+| --- | --- | --- | --- |
+| Ask right after a screenshot (auto clipboard) | No | ✅ | Easiest |
+| `@path` / give a path | No | ✅ | Easy |
+| `/skill kimi-eyes` + Alt-V | Yes | ✅ | More steps |
+| Plain Alt-V | Declare or not | ❌ | Won't work |
+
+> For text-only models, prefer the first two day-to-day; only reach for `/skill kimi-eyes` when you really want the paste gesture (see below).
+
 #### Want Alt+V pasting? (declare `image_in` on the model)
 
 Kimi Code's frontend blocks pasting on models that lack image support. Add
@@ -136,6 +147,37 @@ capabilities = [ "thinking", "tool_use", "image_in" ]   # append image_in
 > Correct usage for text-only models: `@image-path` (`read_image`) or screenshot and
 > ask directly (`read_clipboard_image`); if a paste is rejected, tell the model
 > "the paste was blocked" and it will read the clipboard instead. **No commands needed.**
+
+#### Text-only model but you really want to paste? Use `/skill kimi-eyes`
+
+The warning above says: on a text-only provider, declaring `image_in` and using **Alt-V paste** sends an `image_url` part to the provider and triggers a 400. But the same `image_in` declaration is harmless if you go through the **`/skill` command** instead — `/skill` renders the pasted image as an `Attached image file: <path>` **plain-text path**, producing no image part. This plugin ships a skill that exploits exactly this channel.
+
+**One-time setup (two steps)**:
+
+1. Declare `image_in` on the text-only model (only to pass the `/skill` frontend check; `/skill` sends no image part, so **no 400**):
+
+```toml
+[models."opencode-go/deepseek-v4-flash"]
+capabilities = [ "thinking", "tool_use", "image_in" ]   # append image_in
+```
+
+2. Register the skill — add the plugin's `skills/` dir to the scan list in `~/.kimi-code/config.toml`:
+
+```toml
+extra_skill_dirs = [ "D:/AIGC/Plugin/kimi-eyes/skills" ]
+```
+
+> If the plugin lives elsewhere, use its actual `kimi-eyes/skills` path. After restarting the session, `/skill kimi-eyes` appears in the `/` completion menu.
+
+**Usage**:
+
+```
+/skill kimi-eyes what does this chart show?    ← then Alt-V paste the image, press Enter
+```
+
+The model extracts the path from `Attached image file: <path>`, calls kimi-eyes' `read_image` (the external VLM returns a text description), then answers. No image part is ever produced, so text-only models never 400.
+
+> ⚠️ **Constraint after declaring `image_in`**: for image tasks always go through `/skill kimi-eyes`; do **not** Alt-V paste directly (the main-prompt channel still sends an image part to text-only providers → 400). `@image-path` and "ask after screenshot" keep working as before.
 
 ## Activation and triggering
 
