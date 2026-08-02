@@ -111,6 +111,31 @@ The MCP server starts automatically with the session.
 | Multimodal model | Paste with Alt+V directly — native vision, plugin not involved |
 | Non-multimodal + image path | Type `@screenshot.png` or paste the path; the model calls `read_image` |
 | Non-multimodal + just screenshotted/copied | Do **not** Alt+V paste (the CLI rejects pasting on non-multimodal models with `Current model does not support image input`); just ask "analyze this screenshot" — the model calls `read_clipboard_image` to read the system clipboard |
+| Non-multimodal + paste was rejected | Tell the model "my paste was blocked" — it will switch to `read_clipboard_image` automatically; no need to save the file |
+
+#### Want Alt+V pasting? (declare `image_in` on the model)
+
+Kimi Code's frontend blocks pasting on models that lack image support. Add
+`image_in` to the model in `~/.kimi-code/config.toml`:
+
+```toml
+[models."opencode-go/deepseek-v4-flash"]
+capabilities = [ "thinking", "tool_use", "image_in" ]   # append image_in
+```
+
+> ⚠️ **Important**: `image_in` only lets the **frontend accept** the paste — it does
+> not mean the provider can actually receive images.
+>
+> - Declare it **only when the provider truly supports image input** (e.g.
+>   MiniMax-M3, k3, gpt-5.6-luna, grok-4.5) — those models see natively and the
+>   plugin stays idle
+> - **Never declare it on text-only providers** (e.g. deepseek-v4-flash, GLM text
+>   variants): the paste gets accepted, then the request fails at the provider with
+>   `400 unknown variant image_url, expected text`. The frontend block is a guard.
+>
+> Correct usage for text-only models: `@image-path` (`read_image`) or screenshot and
+> ask directly (`read_clipboard_image`); if a paste is rejected, tell the model
+> "the paste was blocked" and it will read the clipboard instead. **No commands needed.**
 
 ## Activation and triggering
 

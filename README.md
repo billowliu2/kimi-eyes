@@ -95,7 +95,12 @@ KimiCode 前端默认会拦截「不支持图片输入」模型的粘贴。在 `
 capabilities = [ "thinking", "tool_use", "image_in" ]   # 追加 image_in
 ```
 
-> 注意：声明 `image_in` 只是让前端放行粘贴。纯文本模型依然**看不懂**图片内容——这正是插件的用武之地：模型收到图片但看不见内容时，会按 SYSTEM.md 规则自动调 `read_clipboard_image` 从剪贴板读图。**全程零命令、零前缀**。
+> ⚠️ **重要警告**：`image_in` 只是让**前端放行**，不代表 provider 真能收图。
+>
+> - **仅当 provider 本身支持图片输入**（如 MiniMax-M3、k3、gpt-5.6-luna、grok-4.5 等）时声明才有意义——这些模型粘贴后原生看图，插件闲置
+> - **纯文本 provider**（如 deepseek-v4-flash、glm 文本版）**不要声明**——声明后粘贴会被放行，但请求发给 provider 时图片 part 会被拒（400 `unknown variant image_url, expected text`）。此时前端拦截反而是保护
+>
+> 纯文本模型的正确用法：`@图片路径`（read_image）或截图后直接提问（read_clipboard_image 读剪贴板）；粘贴被拦截就直接告诉模型「粘贴被拦截了」，它会自动改读剪贴板。**全程零命令**。
 
 ## 激活与触发
 
