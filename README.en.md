@@ -64,6 +64,9 @@ In a Kimi Code session (any of these):
 
 # From a local directory
 /plugins install D:\AIGC\Plugin\kimi-eyes
+
+# From the China mirror (when GitHub is slow)
+/plugins install https://git.codingplan.site/admin/kimi-eyes/archive/main.zip
 ```
 
 ### 2. Configure the vision API (one-time)

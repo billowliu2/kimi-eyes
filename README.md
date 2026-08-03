@@ -46,6 +46,9 @@
 
 # 方式二：从本地目录安装
 /plugins install D:\AIGC\Plugin\kimi-eyes
+
+# 方式三：从国内镜像安装（GitHub 访问慢时用）
+/plugins install https://git.codingplan.site/admin/kimi-eyes/archive/main.zip
 ```
 
 ### 2. 配置视觉 API（一次性）
